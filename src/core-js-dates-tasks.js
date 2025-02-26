@@ -200,8 +200,18 @@ function getCountWeekendsInMonth(month, year) {
  * Date(2024, 0, 31) => 5
  * Date(2024, 1, 23) => 8
  */
-function getWeekNumberByDate(/* date */) {
-  throw new Error('Not implemented');
+function getWeekNumberByDate(date) {
+  const tempDate = new Date(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+  );
+  const dayNumber = (tempDate.getUTCDay() + 6) % 7;
+  tempDate.setUTCDate(tempDate.getUTCDate() - dayNumber + 3);
+
+  const firstThursday = new Date(Date.UTC(tempDate.getUTCFullYear(), 0, 4));
+  const weekNumber =
+    Math.round((tempDate.getTime() - firstThursday.getTime()) / 604800000) + 1;
+
+  return weekNumber;
 }
 
 /**
@@ -217,12 +227,21 @@ function getWeekNumberByDate(/* date */) {
  */
 function getNextFridayThe13th(date) {
   const currentDate = new Date(date);
-  while (true) {
-    if (currentDate.getDay() === 5 && currentDate.getDate() === 13) {
-      return currentDate;
+  currentDate.setDate(1);
+
+  for (let i = 0; i < 120; i += 1) {
+    const day13 = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      13
+    );
+    if (day13.getDay() === 5) {
+      return day13;
     }
     currentDate.setMonth(currentDate.getMonth() + 1);
   }
+
+  throw new Error();
 }
 
 /**
@@ -268,9 +287,15 @@ function getWorkSchedule(period, countWorkDays, countOffDays) {
   const endDate = new Date(period.end.split('-').reverse().join('-'));
 
   while (currentDate <= endDate) {
-    result.push(currentDate.toLocaleDateString('en-GB'));
-    currentDate.setDate(currentDate.getDate() + countWorkDays + countOffDays);
+    for (let i = 0; i < countWorkDays && currentDate <= endDate; i += 1) {
+      result.push(
+        currentDate.toISOString().split('T')[0].split('-').reverse().join('-')
+      );
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+    currentDate.setDate(currentDate.getDate() + countOffDays);
   }
+
   return result;
 }
 
